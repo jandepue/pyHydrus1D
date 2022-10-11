@@ -13,7 +13,7 @@ Created on Tue Aug 20 15:19:22 2013
 import numpy
 import pylab
 import scipy.linalg as linalg
-import copy 
+import copy
 
 from DIY_Hydrus_Funky import *
 from RetentionConductivityCapacity_Funky import *
@@ -95,9 +95,9 @@ while end_T==0:
         dt_now=t_end-t[iT]
         t_now=t_end
         end_T=1
-    
+
     print('Time: %s / %s ' %(t_now,t_end))
-        
+
     nit_now=0
     h_prevT=copy.deepcopy(h[iT])
     if iT > 0:
@@ -106,10 +106,10 @@ while end_T==0:
     else:
         h_prevIT=copy.deepcopy(h[iT])
     end_IT=0
-    
+
     while (end_IT==0) & (nit_now<=nit_term):
 #        print(nit_now)
-        
+
         # GET P & F WITHOUT BOUNDARY CONDITIONS
         P=P_j1k(h_prevIT,z,dt_now,incl,ModelSWRC,ParSWRC,ModelKh,ParKh,ModelCap,ParCap)
         F=F_j1k(h_prevIT,h_prevT,z,dt_now,incl,ModelSWRC,ParSWRC,ModelKh,ParKh,ModelCap,ParCap)
@@ -121,10 +121,10 @@ while end_T==0:
         # BOTTOM BOUNDARY CONDITION
         h_BC=h0[-1]
         P,F=BC_DiricheletBottom(P,F,h_prevIT,h_prevT,dt_now,h_BC,z,ModelKh,ParKh)
-        
+
         # CALCULATE H_NOW
         h_now=numpy.dot(numpy.linalg.inv(P),F).squeeze()
-        
+
         # CHECK THETA_DIFF & H_DIFF
         nit_now=nit_now+1
         if nit_now > 1:
@@ -133,7 +133,7 @@ while end_T==0:
             if all(theta_diff < theta_tol) & all(h_diff < h_tol):
                 end_IT=1
         h_prevIT=copy.deepcopy(h_now)
-            
+
     if end_IT==1:
         # Save h
         h.append(h_now)
@@ -148,17 +148,19 @@ while end_T==0:
         elif (nit_now >= nit_decr_dt) & (dt_now>dt_min):
             print('Decreasing time step')
             dt_now=dt_now*decr_dt
-            
+
     elif(dt_now>dt_min):
         print('Decreasing time step drastically')
         dt_now=dt_now*dt_term
-        
+
     else:
         print('Not converging, minimal time step reached, ending calculation')
         end_T=1
-    
-ParSWRC_2D=map(lambda x : x[None,:],ParSWRC)
-ParKh_2D=map(lambda x : x[None,:],ParKh)
+
+# ParSWRC_2D=map(lambda x : x[None,:],ParSWRC)
+# ParKh_2D=map(lambda x : x[None,:],ParKh)
+ParKh_2D=[x[None,:] for x in ParKh]
+ParSWRC_2D=[x[None,:] for x in ParSWRC]
 
 h=numpy.array(h)
 theta=ModelSWRC(h,ParSWRC_2D)
@@ -269,4 +271,3 @@ ax.set_ylabel('Relative mass error')
 ax.set_title('Relative mass error')
 
 pylab.show()
-
